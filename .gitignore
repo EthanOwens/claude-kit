@@ -1,0 +1,7 @@
+# This directory is a portable kit: anything specific to one project or one
+# machine stays out of the kit's repo. Project knowledge belongs in the
+# project's own CLAUDE.md, and specs live in the project root.
+settings.json
+settings.local.json
+state/
+*.local.md
