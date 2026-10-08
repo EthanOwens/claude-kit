@@ -45,7 +45,7 @@ Follow [spec-template.md](spec-template.md). Task rules:
 - **Order by dependency** and fill in `Depends on`.
 - **Self-contained.** An implementer with no conversation history must be able to do the task from the spec alone. Name the files, functions and existing patterns to follow.
 - **Checkable acceptance criteria.** Statements that are true or false of the finished code, not intentions.
-- **Manual check.** Concrete steps in the running app, for anything automated checks can't confirm.
+- **Test steps.** Concrete actions in the running project and what each should show. The tester agent follows them, and you get whatever it can't reach.
 - No code beyond short identifiers or signatures.
 
 When appending, continue numbering from the last task ID and keep the `## Progress` section as the last section of the file.
@@ -53,6 +53,8 @@ When appending, continue numbering from the last task ID and keep the `## Progre
 ## 6. Verification commands
 
 /dev-loop's agents run the commands listed under `## Verification` in `CLAUDE.md`. If that section is missing, work out the commands from the project's manifests (package.json scripts, Cargo.toml, Makefile, pyproject.toml and so on), confirm them with the user, and add the section (create `CLAUDE.md` if needed). Run them once on the current tree. If any fail, tell the user before handing over: the loop needs a passing baseline.
+
+/dev-loop's tester follows `## Testing` in `CLAUDE.md`. If the project has something to run and exercise (an app, CLI, API or service) and that section is missing, offer to write one. It should cover how to reach the running project, which tools to use, preconditions such as which account to use, what's off-limits, and what stays manual. The section is optional; without it, every test step goes to the user.
 
 ## 7. Hand over
 

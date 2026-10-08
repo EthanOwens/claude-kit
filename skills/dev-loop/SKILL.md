@@ -1,6 +1,6 @@
 ---
 name: dev-loop
-description: Work through the next task in a spec.md written by /spec, one task per run. A fresh implementer subagent builds it, a fresh reviewer subagent checks it, then the changes are staged and the loop waits until the user has committed them.
+description: Work through the next task in a spec.md written by /spec, one task per run. A fresh implementer subagent builds it, a fresh reviewer checks it, a fresh tester tries it in the running project, then the changes are staged and the loop waits until the user has committed them.
 disable-model-invocation: true
 argument-hint: "[spec-file] | status | abort"
 allowed-tools: Bash(bash ${CLAUDE_SKILL_DIR}/scripts/loop-state.sh *)
@@ -8,7 +8,7 @@ allowed-tools: Bash(bash ${CLAUDE_SKILL_DIR}/scripts/loop-state.sh *)
 
 # /dev-loop
 
-You are the coordinator. Subagents do the reading, editing and reviewing; you keep the spec, the commit gate and the user in sync. Keep your own context small: don't read source files yourself.
+You are the coordinator. Subagents do the reading, editing, reviewing and testing; you keep the spec, the commit gate and the user in sync. Keep your own context small: don't read source files yourself.
 
 Arguments: `$ARGUMENTS`
 - empty: use `spec.md` at the repository root
@@ -57,21 +57,38 @@ If it reports `STATUS: blocked`, put its question to the user with AskUserQuesti
 Spawn a `dev-loop-reviewer` subagent and wait for its result. Give it the spec path, the task ID and the implementer's CHANGED list, and nothing else: no reasoning, no claims that checks passed.
 
 - **VERDICT: PASS**: go to step 5.
-- **VERDICT: FAIL**: send only the BLOCKING findings to the implementer (the same one through SendMessage if available, otherwise a new one with the findings in its prompt), then review again with a **new** reviewer. Allow at most 2 fix rounds. If the result is still FAIL after that, don't stage anything. Show the user the findings and ask with AskUserQuestion: stage it as it is, run one more fix round, or stop so they can fix it themselves.
+- **VERDICT: FAIL**: run a fix round (below), then review again with a **new** reviewer.
 
-## 5. Record and stage
+## 5. Test (fresh context)
+
+If CLAUDE.md has no `## Testing` section, skip this step; every test step goes to the user in the handover.
+
+Otherwise spawn a `dev-loop-tester` subagent and wait for its result. Give it the spec path, the task ID and the implementer's CHANGED list.
+
+- **VERDICT: PASS**: go to step 6.
+- **VERDICT: FAIL**: run a fix round, then review again with a new reviewer and test again with a new tester.
+- **VERDICT: COULDN'T TEST** because a precondition failed (for example the app isn't running): tell the user what's needed and ask with AskUserQuestion whether to test again once it's fixed or skip testing for this task.
+
+Steps the tester left for the user go into the handover.
+
+### Fix rounds
+
+A fix round sends only the reviewer's BLOCKING findings or the tester's FAILURES to the implementer (the same one through SendMessage if available, otherwise a new one with the findings in its prompt). Allow at most 2 fix rounds per task, counting review and test failures together. If problems remain after that, don't stage anything. Show the user the findings and ask with AskUserQuestion: stage it as it is, run one more fix round, or stop so they can fix it themselves.
+
+## 6. Record and stage
 
 1. In the spec, set the task to `Status: done`.
 2. Add one line at the end of the `## Progress` section at the bottom of the spec: `- [x] <task-id> <title>`.
 3. Run `stage`. It stages every change in the tree, which is exactly this task's work because the tree was clean when the task began. The spec update goes into the same commit.
 
-## 6. Hand over and stop
+## 7. Hand over and stop
 
 Report briefly:
 - **Task**: ID, title, and one to three lines on what changed
 - **Checks**: each verification command and its result, from the reviewer's own run
-- **Try it**: the manual check steps from the spec, adjusted by the implementer's MANUAL TEST notes
-- **Notes**: reviewer NOTES and implementer NOTES the user should know, if any
+- **Tested**: the tester's verdict and one line per step, or "no `## Testing` section" if skipped
+- **Try it**: the test steps the tester couldn't cover, adjusted by the implementer's TEST STEPS notes
+- **Notes**: reviewer, tester and implementer notes the user should know, if any
 - **Staged**: the file summary printed by `stage`
 - **Suggested commit message**: one line, in the style of `git log --oneline -10`
 - Finish with: "Commit when you're happy, then run `/dev-loop` (or say continue) for the next task."

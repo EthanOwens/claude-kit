@@ -33,8 +33,8 @@ Acceptance:
 - <A statement that is true or false of the finished code>
 - <Another>
 
-Manual check:
-1. <A step in the running app>
+Test steps:
+1. <An action in the running project>
 2. <What you should see>
 
 ### T2 <Short title>
