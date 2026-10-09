@@ -83,8 +83,20 @@ A fix round sends only the reviewer's BLOCKING findings or the tester's FAILURES
 
 ## 7. Hand over and stop
 
-Report briefly:
-- **Task**: ID, title, and one to three lines on what changed
+Open with a heading and a short summary that someone skimming can understand without having read the spec or the code:
+
+```
+## Ready to commit: <name>
+
+<summary>
+```
+
+- **Name**: three to eight words in plain language describing what's different now, from the point of view of someone using the project (for example "Sticky notes remember their size"). Not the task ID, a file or function name, or the spec's title copied over.
+- **Summary**: two or three sentences: what changed, what you'll notice, and anything you need to do or watch for. No jargon, paths or code identifiers.
+
+Then report briefly:
+- **Task**: ID and title from the spec
+- **Changed**: one to three lines on what changed in the code
 - **Checks**: each verification command and its result, from the reviewer's own run
 - **Tested**: the tester's verdict and one line per step, or "no `## Testing` section" if skipped
 - **Try it**: the test steps the tester couldn't cover, adjusted by the implementer's TEST STEPS notes
