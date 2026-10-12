@@ -1,0 +1,14 @@
+{
+  "name": "claude-kit",
+  "description": "Ethan's Claude Code workflow plugins",
+  "owner": {
+    "name": "Ethan Owens"
+  },
+  "plugins": [
+    {
+      "name": "kit",
+      "source": "./",
+      "description": "Spec-driven dev loop (/kit:spec, /kit:dev-loop) and one-shot tasks (/kit:task) with fresh implementer, reviewer and tester agents."
+    }
+  ]
+}

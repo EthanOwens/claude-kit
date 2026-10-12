@@ -46,4 +46,4 @@ Depends on: T1
 
 ## Progress
 
-<!-- /dev-loop adds one line here per finished task, in the same commit as the task. -->
+<!-- /kit:dev-loop adds one line here per finished task, in the same commit as the task. -->

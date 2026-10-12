@@ -1,0 +1,8 @@
+{
+  "name": "kit",
+  "description": "Spec-driven development loop: plan a list of changes into small tasks, then build each one with a fresh implementer, reviewer and tester. Includes a one-shot task command for small jobs. Works with or without git.",
+  "author": {
+    "name": "Ethan Owens"
+  },
+  "repository": "https://github.com/EthanOwens/claude-kit"
+}

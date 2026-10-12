@@ -1,63 +1,70 @@
-# Claude Code dev-loop kit
+# kit: a Claude Code workflow plugin
 
-A portable `/spec` → `/dev-loop` workflow. Nothing in this folder is specific to one project.
+Plan a list of changes into small tasks, then build them one at a time. Each task gets a fresh implementer, a reviewer that didn't write it, and a tester that tries it in the running app. For small jobs, a one-shot command skips the planning. Works in any folder, with or without git.
+
+| Command | What it does |
+|---|---|
+| `/kit:spec [planning-file] [spec-file]` | Reads `planning.md`, explores the code, asks you about anything unclear, and writes `spec.md`: small, ordered tasks with acceptance criteria and test steps. |
+| `/kit:dev-loop [spec-file \| status \| abort]` | Runs the next task: implement → review → test, with up to 2 fix rounds. Then it stops for you. |
+| `/kit:task <what to change>` | One-shot: writes a short brief and waits while you adjust it; once you say go, implement → review → test, and a report. No planning file or spec. |
 
 ## Install
 
-Pick one:
+On any machine, in a Claude Code session:
 
-- **Copy**: drop this folder into a project as `.claude/`.
-- **Git submodule**: from the project root, `git submodule add <kit-repo-url> .claude`, then commit. The project must not already have a `.claude/` folder.
+```
+/plugin marketplace add EthanOwens/claude-kit
+/plugin install kit@claude-kit
+```
 
-Then give the project's `CLAUDE.md` two sections. `/spec` offers to add either one if it's missing.
+Pick **user scope** so it's active in every folder. Plugins load when a session starts, so start a new session, or run `/reload-plugins`, after installing.
 
-- `## Verification` (required): commands that must exit 0 after every change, such as a type check, build and unit tests.
-- `## Testing` (optional): how the tester reaches and exercises the running project, which tools to use (for example an MCP server registered in the project's `.mcp.json`), preconditions, what's off-limits, and what stays manual. Without it, the tester step is skipped and every test step goes to you.
+**While developing the plugin itself**, add your local clone instead: `/plugin marketplace add ~/projects/personal/claude-kit`. A marketplace added from a local path loads the plugin's files in place, so your edits take effect at the next session start (or `/reload-plugins`) with no update step.
 
-### Working with the submodule
+### Updates
 
-- Clone a project that uses the kit: `git clone --recurse-submodules <project-url>`, or run `git submodule update --init` in an existing clone.
-- Pull kit updates into a project: `git submodule update --remote .claude`, then commit the changed `.claude` pointer in the project.
-- To edit the kit from inside a project, run `cd .claude && git switch main` first (submodules check out a detached HEAD), then commit and push from there.
+`plugin.json` has no `version`, so every pushed commit counts as a new version. Get it with `/plugin marketplace update claude-kit`, or turn on auto-update for the marketplace under **Marketplaces** in `/plugin`.
+
+## Git mode and checkpoint mode
+
+`/kit:dev-loop` picks its mode from the folder:
+
+- **Git repository (git mode)**: a task can only start from a clean working tree. When it's done, every change is staged and the loop won't start the next task until you've committed it. Commits are always yours; the loop never commits, resets or discards anything. Its state lives in `.git/kit-dev-loop`, so it never shows up as a change.
+- **No git (checkpoint mode)**: progress is tracked in the spec's `Status:` lines. After each task the loop stops and waits for you to say "continue". The reviewer reads the changed files instead of a diff. There's no undo beyond your editor's own, so this suits small or throwaway work.
+
+`/kit:task` works the same in both: it leaves changes uncommitted in a git repository.
+
+## What a project provides
+
+Nothing is required, but these make the agents much better. All of it lives in the project, not the plugin. When `CLAUDE.md` is missing or incomplete, `/kit:spec` sets it up and `/kit:task` offers to, following [reference/project-setup.md](reference/project-setup.md): it drafts only the missing sections, runs the checks once, and writes nothing until you approve.
+
+- **`CLAUDE.md` → `## Verification`**: commands that must exit 0 after every change, such as a type check, build and tests. `/kit:spec` offers to add it. Without it, the agents check their work another way and say how.
+- **`CLAUDE.md` → `## Testing`** (optional): how the tester reaches the running project, which tools to use, preconditions (such as which test account), what's off-limits, and what stays manual. Without it, test steps come to you.
+- **`CLAUDE.md` → `## Gotchas`** (optional): non-obvious things that cause mistakes, such as generated files, settings kept outside the repo, or platform quirks.
+- **`CLAUDE.md` → `## Preferences and notes`**: your own rules and knowledge: how you like changes made, non-negotiables, things that live outside the repo, areas to leave alone, known issues. Every agent follows it, and the reviewer treats breaking a non-negotiable as blocking.
+- **`.mcp.json`** (optional): MCP servers the tester uses, such as a browser or app-automation server.
+- **`planning.md` and `spec.md`**: your plan and the generated tasks.
 
 ## Roles
 
-| Role | Where it runs | Job |
+| Role | Runs as | Job |
 |---|---|---|
-| Coordinator | Your session, through `/dev-loop` | Picks the task, starts the other agents, updates the spec, stages, and waits for your commit. Runs in your session because it has to ask you questions and stop for commits. |
-| Implementer | `agents/dev-loop-implementer.md`, fresh context | Builds one task and runs the verification commands. |
-| Reviewer | `agents/dev-loop-reviewer.md`, fresh context, read-only | Re-runs verification and checks the change against the task's acceptance criteria, without seeing the implementer's reasoning. |
-| Tester | `agents/dev-loop-tester.md`, fresh context, can't edit files | Follows the task's test steps in the running project using the tools named in `## Testing`, and reports pass/fail per step with evidence. |
+| Coordinator | Your session, via `/kit:dev-loop` or `/kit:task` | Picks the task, briefs the agents, updates the spec, checkpoints with you |
+| Implementer | `kit:implementer`, fresh context | Builds one task and runs the verification commands |
+| Reviewer | `kit:reviewer`, fresh context, read-only | Re-runs verification and checks the change against the acceptance criteria, without seeing the implementer's reasoning |
+| Tester | `kit:tester`, fresh context, can't edit files | Follows the test steps in the running project and reports pass/fail per step with evidence |
 
-## Use
+## Moving a project off the old `.claude` submodule
 
-1. Write the changes you want as a plain list in `planning.md` at the project root.
-2. `/spec`: Claude explores the code, asks you about anything ambiguous, and writes `spec.md`, a list of small, ordered tasks. Pass paths to use other files: `/spec docs/plan.md docs/spec.md`.
-3. `/dev-loop`: runs the next task. A fresh implementer builds it, a fresh reviewer checks it, a fresh tester tries it in the running project, and the changes are staged. Then it stops.
-4. Check anything the tester couldn't reach, commit it yourself, then run `/dev-loop` (or say "continue") for the next task. It won't continue until the staged task is committed and the tree is clean.
+```sh
+git submodule deinit -f .claude
+git rm -f .claude
+rm -rf .git/modules/.claude
+git commit -m "Moved claude-kit from submodule to plugin"
+```
 
-`/dev-loop status` shows where you are. `/dev-loop abort` forgets the task in flight and leaves your files alone.
-
-## Files
-
-| Path | Purpose |
-|---|---|
-| `skills/spec/` | `/spec` and the spec template |
-| `skills/dev-loop/` | `/dev-loop` and its commit-gate script |
-| `agents/dev-loop-implementer.md` | Implements one task in fresh context |
-| `agents/dev-loop-reviewer.md` | Reviews one task's change in fresh context (read-only) |
-| `agents/dev-loop-tester.md` | Tests one task in the running project (no file edits) |
-| `.gitignore` | Keeps project and machine files out of the kit |
-
-## What stays in the project
-
-These belong to each project, not the kit:
-
-- `CLAUDE.md`: project knowledge, the `## Verification` commands and the `## Testing` instructions
-- `.mcp.json` at the project root: MCP servers the tester uses, if any
-- `planning.md` and `spec.md`: committed with the project's own history
-- `.claude/settings.json`, `.claude/settings.local.json` and `.claude/state/`: ignored by the kit's `.gitignore`
+The project's `.claude/` folder is then free for its own settings and project-only skills.
 
 ## Requirements
 
-Git and bash. On Windows, Claude Code runs commands in Git Bash.
+Claude Code with plugin support, and bash. On Windows, Claude Code runs commands in Git Bash. Git is optional.
