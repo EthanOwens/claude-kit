@@ -34,6 +34,10 @@ Use what you already learned while exploring the code; look further only where y
 
 If the user doesn't want testing set up, leave the section out.
 
+If the project has to be running before anything can be tested, add a `### Precondition` subsection with one command that exits 0 only when it's ready, such as a port check. The coordinator runs it before starting a tester, so a tester isn't spent finding out the app is down. Test the command once both ways if you can.
+
+Don't create `### Lessons`. That subsection fills in over time, one approved lesson at a time.
+
 **Gotchas.** Only non-obvious things you actually found that would cause mistakes: constraints, generated files, things that must not be edited, platform quirks, things configured outside the repo. Never write an architecture tour or file-by-file descriptions; agents can read the code.
 
 **Preferences and notes.** Always include this section. Ask the user, in one open question, whether they have any of these to add:
@@ -68,6 +72,10 @@ Run all of these after every change. Each must exit 0:
 ## Testing
 
 - <how to reach the running project, tools, account, off-limits, manual steps>
+
+### Precondition
+
+`<command that exits 0 only when the project is ready to test>`
 
 ## Gotchas
 

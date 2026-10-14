@@ -24,6 +24,7 @@ Source: <planning file>, <date>
 
 Status: todo
 Depends on: none
+Tester: yes | no, with a short reason
 
 <What to change and why, in two to six sentences. Name files, functions and existing patterns to follow.>
 
@@ -41,6 +42,7 @@ Test steps:
 
 Status: todo
 Depends on: T1
+Tester: yes | no, with a short reason
 
 ...
 

@@ -1,8 +1,9 @@
 ---
 name: task
-description: One-shot change for small jobs. Describe what you want and approve (or adjust) a short brief; then a fresh implementer builds it, a fresh reviewer checks it and, if the project has a "## Testing" section in CLAUDE.md, a tester tries it. No planning file or spec, and it works with or without git.
+description: One-shot change for small jobs. Describe what you want and approve (or adjust) a short brief; then a fresh implementer builds it, a fresh reviewer checks it and, when useful, a tester tries it in the running project. No planning file or spec, and it works with or without git.
 disable-model-invocation: true
 argument-hint: "<what to change>"
+allowed-tools: Bash(bash "${CLAUDE_SKILL_DIR}/../../scripts/kit-config.sh" *) Bash(bash ${CLAUDE_SKILL_DIR}/../../scripts/kit-config.sh *)
 ---
 
 # /kit:task
@@ -10,6 +11,10 @@ argument-hint: "<what to change>"
 Request: `$ARGUMENTS`
 
 If the request is empty, ask the user what they want done and stop.
+
+## Settings
+
+!`bash "${CLAUDE_SKILL_DIR}/../../scripts/kit-config.sh" show`
 
 You are the coordinator. Subagents (`kit:implementer`, `kit:reviewer`, `kit:tester`) do the editing, reviewing and testing. **Never commit or discard changes**: no `git commit`, `git push`, `git reset`, `git stash`, `git checkout -- <path>` or `git restore`.
 
@@ -39,6 +44,7 @@ Context: files, functions and existing patterns to follow
 Defaults chosen: anything you decided for them
 Acceptance: checkable statements about the finished change
 Test steps: actions and what each should show (skip if nothing runs)
+Tester: yes | no, with a short reason (no when nothing runs, or every step needs a human, such as native windows, real keyboard focus or visual judgment)
 Out of scope: what not to touch
 ```
 
@@ -52,13 +58,7 @@ When the user replies:
 
 ## 3. Implement, review and test
 
-Use the same agents and rules as /kit:dev-loop, but pass the brief verbatim in each prompt in place of a spec path and task ID.
-
-1. **Implement**: spawn `kit:implementer` with the brief and wait for it. If it reports `STATUS: blocked`, ask the user its question, then send the answer back to it.
-2. **Review**: spawn `kit:reviewer` with the brief and the implementer's CHANGED list only: no reasoning, no claims that checks passed. Tell it whether this is a git repository, and list any files that were already modified before the task.
-3. **Test**: only if CLAUDE.md has a `## Testing` section, spawn `kit:tester` with the brief and the CHANGED list.
-
-**Fix rounds**: send only the reviewer's BLOCKING findings or the tester's FAILURES back to the implementer, then review again (and test again) with new agents. Allow at most 2 fix rounds. If problems remain, stop and show the user the findings.
+Read `${CLAUDE_PLUGIN_ROOT}/reference/agent-rounds.md` and follow it, passing the approved brief verbatim to every agent in place of a spec path and task ID.
 
 ## 4. Report
 
@@ -71,8 +71,11 @@ Use the same agents and rules as /kit:dev-loop, but pass the brief verbatim in e
 Then briefly:
 - **Changed**: the files and what changed in each
 - **Checks**: each verification command and its result, from the reviewer's own run, or how the change was checked without one
+- **Fix rounds**: how many ran, what each fixed, and whether the retry model was used (omit if none)
 - **Tested**: the tester's verdict per step, or "not tested" with why
 - **Try it**: test steps nobody could run for you
 - **Notes**: anything from the agents the user should know
 - **In a git repository**: the changes are left uncommitted; give a one-line suggested commit message in the style of `git log --oneline -10`
 - **Without git**: remind the user there's no undo history beyond the editor's own
+
+End with: "Say \"test it\" or \"it doesn't work: ...\" if you want the tester to look again." If they do, follow **Testing on demand** in the agents reference (in /kit:task there's no gate to reopen).

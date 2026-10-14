@@ -48,6 +48,7 @@ Follow [spec-template.md](spec-template.md). Task rules:
 - **Self-contained.** An implementer with no conversation history must be able to do the task from the spec alone. Name the files, functions and existing patterns to follow.
 - **Checkable acceptance criteria.** Statements that are true or false of the finished code, not intentions.
 - **Test steps.** Concrete actions in the running project and what each should show. The tester agent follows them, and you get whatever it can't reach.
+- **Tester: yes or no**, with a short reason. Say no when nothing runs, or when every test step needs a human: native window behaviour, real keyboard focus, or visual judgment such as "looks right". Say yes when there's logic the tester can exercise and observe. The tester costs far more than the other agents, so don't spend it where it can't see anything.
 - No code beyond short identifiers or signatures.
 
 When appending, continue numbering from the last task ID and keep the `## Progress` section as the last section of the file.

@@ -8,6 +8,7 @@
 #   begin <spec> <task-id> start a task (requires a clean working tree)
 #   stage                  stage every change and wait for the user's commit
 #   check-commit           succeed only once the staged task has been committed
+#   reopen                 reopen a staged, uncommitted task for more fixes
 #   abort                  forget the in-flight task (working tree untouched)
 set -uo pipefail
 
@@ -103,13 +104,26 @@ case "${1:-status}" in
     rm -f "$state"
     ;;
 
+  reopen)
+    if [ "$(get phase)" != "awaiting-commit" ]; then
+      echo "BLOCKED: no staged task to reopen." >&2
+      exit 1
+    fi
+    if [ "$(git rev-parse HEAD)" != "$(get base)" ]; then
+      echo "BLOCKED: task $(get task) was already committed; fix it as new work instead." >&2
+      exit 1
+    fi
+    sed 's/^phase=.*/phase=implementing/' "$state" > "$state.tmp" && mv "$state.tmp" "$state"
+    echo "OK: task $(get task) reopened for more fixes. Its changes stay staged until the next stage."
+    ;;
+
   abort)
     rm -f "$state"
     echo "OK: loop state cleared. The working tree was left as it is."
     ;;
 
   *)
-    echo "usage: loop-state.sh status | begin <spec> <task-id> | stage | check-commit | abort" >&2
+    echo "usage: loop-state.sh status | begin <spec> <task-id> | stage | check-commit | reopen | abort" >&2
     exit 2
     ;;
 esac
