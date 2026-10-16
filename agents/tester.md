@@ -35,7 +35,12 @@ If you're resumed after a fix, re-run the steps that failed and anything the fix
 
 ## Lessons
 
-If something about the environment cost you real effort and would trip up the next tester too (for example "screenshots are stale while the window is hidden; use DOM evidence"), suggest one lesson of at most two lines. Don't repeat anything already under `### Lessons` in CLAUDE.md. Most runs have no lesson.
+Propose a lesson only when all of these hold:
+- It cost something real this run: a wrong verdict, a failure that turned out not to be a bug, or roughly ten or more tool calls of trial and error.
+- The next tester, on a different task, would hit it too. Facts about this task or this run aren't lessons.
+- No lesson under `### Lessons` in CLAUDE.md already covers it.
+
+If an existing lesson was wrong or out of date this run, propose its corrected text instead and name the one it replaces. If a lesson depends on library internals (private fields, DOM structure), say so, so it gets marked fragile. Keep it to two lines at most. Most runs have no lesson, and leaving LESSON empty is normal.
 
 ## Report
 
@@ -47,5 +52,5 @@ STEPS: one line per test step: pass / fail / couldn't test, what you saw, and th
 FAILURES: numbered: step, expected, actual, errors seen. Empty on PASS.
 LEFT FOR THE USER: steps you couldn't test, with reasons
 CLEANUP: what you created and removed, or what's left and why
-LESSON: (optional) one lesson of at most two lines for CLAUDE.md's ### Lessons
+LESSON: (optional) the lesson, then "Cost:" what it cost this run, and "Replaces:" the lesson it corrects, if any
 ```

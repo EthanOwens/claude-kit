@@ -57,7 +57,7 @@ Mention in the handover how many fix rounds ran, what each fixed, and whether th
 
 ## Lessons
 
-If the tester's report includes a `LESSON:`, ask the user with AskUserQuestion whether to add it under `### Lessons` in CLAUDE.md's `## Testing` section (create the subsection if needed). Keep each lesson to one or two lines, and keep at most 8; if the subsection is full, ask which one to replace. Never add a lesson without asking. In git mode, do this before staging, so the lesson goes into the same commit.
+If the tester's report includes a `LESSON:`, check it before asking the user. Drop it, and say so in one line in the handover, when it has no `Cost:` or only a minor one, when an existing lesson already covers it, or when it only describes this task. Otherwise ask the user with AskUserQuestion whether to add it under `### Lessons` in CLAUDE.md's `## Testing` section (create the subsection if needed). When it names `Replaces:`, offer to replace that lesson rather than add one. Mark a lesson that depends on library internals with "(fragile)". Keep each lesson to one or two lines and at most 8; if the subsection is full, ask which one to replace or merge. Never add a lesson without asking. In git mode, do this before staging, so the lesson goes into the same commit.
 
 ## Testing on demand
 
